@@ -26,82 +26,65 @@
 <span class="title">Login</span>
 <span class="description" style="color:white">Entre com seu Usuário e senha</span>
 <form id="formLogin">
-<div class="input-wrap">
-<span class="title">Usuário</span>
-<input type="text" id="usuario" placeholder="Digite seu usuario...">
-</div>
-<div class="input-wrap">
-<span class="title">Senha</span>
-<input type="password" id="senha" placeholder="Digite sua senha...">
-<input type="submit" style="display: none">
-<br>
-<div class="cf-turnstile" data-sitekey="0x4AAAAAAAkv36dAMBCxea7Y"></div>
-</div>
-<div class="buttons-wrap">
+  <div class="input-wrap">
+    <span class="title">Usuário</span>
+    <input type="text" id="usuario" placeholder="Digite seu usuário...">
+  </div>
+  <div class="input-wrap">
+    <span class="title">Senha</span>
+    <input type="password" id="senha" placeholder="Digite sua senha...">
+    <input type="submit" style="display: none">
+  </div>
+  <br>
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAAAkv36dAMBCxea7Y"></div>
   
-<button class="register-btn" onclick="location.href = 'comprar.html'" id="registrar" type="button">Registrar</button>
-<button class="login-btn" onclick="login()"type="button">Entrar</button>
-</div>
-<div style="margin-top:2vh">
+  <div class="buttons-wrap">
+    <button class="register-btn" onclick="location.href = 'comprar.html'" id="registrar" type="button">Registrar</button>
+    <button class="login-btn" onclick="login()" type="button">Entrar</button>
+  </div>
+  <div style="margin-top:2vh"></div>
+</form>
 
-
-
-</div>
-</div></body>
 <script>
-    const notyf = new Notyf({
-      duration: 10000,
-      position: {
-        x: 'center',
-        y: 'top',
-      },
-      types: [
-        {
-          type: 'warning',
-          icon: {
-            className: 'material-icons',
-            tagName: 'i',
-            text: 'warning'
-          }
-        },
-        {
-          type: 'error',
-          duration: 10000,
-          dismissible: true
-        },
-        {
-          type: 'success',
-          duration: 10000,
-          dismissible: true
-        }
-      ]
-    });
-        function login(){
-            var email = document.getElementById("usuario").value;
-            var senha = document.getElementById("senha").value;
+  const notyf = new Notyf({
+    duration: 10000,
+    position: { x: 'center', y: 'top' },
+    types: [
+      { type: 'warning', icon: { className: 'material-icons', tagName: 'i', text: 'warning' }},
+      { type: 'error', duration: 10000, dismissible: true },
+      { type: 'success', duration: 10000, dismissible: true }
+    ]
+  });
+
+  function login() {
+    const email = document.getElementById("usuario").value;
+    const senha = document.getElementById("senha").value;
+
     
-            $.ajax({
-                url: 'payments/login.php',
-                type: 'POST',
-                data: {"usuario": email, "senha": senha},
-                dataType: 'json',
-                success : function(pxmsg){
-                    if(pxmsg.success){
-                        notyf.success('Logado com Sucesso, Redirect...');
-                        setTimeout(() => {
-                            location.href = "dashboard";
-                        }, 3000);
-                    }else if(pxmsg.renovar){
-                        notyf.error(pxmsg["message"]);
-                        setTimeout(() => {
-                            location.href = "dashboard/renovar.php";
-                        }, 3000);
-                    }
-                    else{
-                        notyf.error(pxmsg["message"]);
-                    }
-                }
-            })
+    const captchaToken = document.querySelector('.cf-turnstile [name="cf-turnstile-response"]').value;
+
+    if (!captchaToken) {
+      notyf.error("Por favor, complete o CAPTCHA.");
+      return;
+    }
+
+    $.ajax({
+      url: 'payments/login.php',
+      type: 'POST',
+      data: { "usuario": email, "senha": senha, "captcha_response": captchaToken },
+      dataType: 'json',
+      success: function (pxmsg) {
+        if (pxmsg.success) {
+          notyf.success('Logado com Sucesso, Redirect...');
+          setTimeout(() => { location.href = "dashboard"; }, 3000);
+        } else if (pxmsg.renovar) {
+          notyf.error(pxmsg.message);
+          setTimeout(() => { location.href = "dashboard/renovar.php"; }, 3000);
+        } else {
+          notyf.error(pxmsg.message);
         }
-    </script>
+      }
+    });
+  }
+</script>
 </html>

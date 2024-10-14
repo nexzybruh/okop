@@ -20,111 +20,68 @@
 </svg>
 <span>SyncData</span>
 </div>
-<div class="fatherCenter">
-  <h1 style="font-size:4.1vh;color:white">Registro</h1>
-  <div class="comprarContainer">
-    <span style="color:white;font-size: 2vh; width: 80%; max-width: 150vh;margin-bottom: 1vh;">
-      Para adquirir acesso digite seu futuro usuário e senha, <u>após o pagamento ser aprovado seu usuário será liberado para
-      o <a onclick="window.location.href = 'login.html'">login</a>!</u>
-    </span>
-    <br>
-    <input class="comprarInputs" type="text" name="user" id="user" autocomplete="false" placeholder="Usuário">
-    <input class="comprarInputs" type="password" name="pass" id="pass" autocomplete="false" placeholder="Senha">
-    <input class="comprarInputs" type="email" name="email" id="email" placeholder="Email" style="margin-top:2vh">
-    
-    <select id="tipo" class="comprarInputs">
-      <option value="3">Mensal (40R$)</option>
-      <option value="2">Semanal (25R$)</option>
-      <option value="1">Diário (10R$)</option>
-    </select>
-    
-    <div style="overflow:hidden">
-      <span id="aviso" style="color:red;position:relative;transition: all 0.3s cubic-bezier(0.01, 0.46, 0.68, 1) 0s;top: -3vh;font-size:1.7vh"></span>
-    </div>
-    
-    <div style="margin-top:1vh;width: 34vh;margin-bottom:1vh;"></div>
-    
-    <input type="button" id="realizar" value="Comprar!">
-    <span style="color:white;font-size: 1.3vh; width: 90%; margin-top:1vh">
-      Clicando em Comprar você confirma que está de acordo com os <a href="/termos">termos</a>
-    </span>
+<span class="title">Registro</span>
+<span class="description" style="color:white">Entre com seu Usuário e senha</span>
+<form id="formLogin">
+  <div class="input-wrap">
+    <span class="title">Usuário</span>
+    <input type="text" id="usuario" placeholder="Digite seu usuário...">
   </div>
-</div>
-
-<div class="fatherCenter" style="display: none;">
-  <h1 style="font-size:4.1vh;color:white">Pagamento</h1>
-  <div class="comprarContainer">
-    <span style="color:white;font-size: 2vh; width: 80%; max-width: 150vh;margin-bottom: 1vh;">
-      Para efetuar o pagamento escaneie o código QR com o seu app do banco ou use o código copia e cola via PIX
-    </span>
-    <br>
-    <img src="" id="img-pix" style="width:30vh;height:30vh;margin-bottom:4vh;border-radius:2vh;" alt="">
-    <br>
-    <input type="text" class="comprarInputs" name="code-pix" id="code-pix" autocomplete="false" style="margin-bottom: 3vh;height: 20vh;">
-    <input type="button" id="copiar" value="Copiar" onclick="CopyPix()">
+  <div class="input-wrap">
+    <span class="title">Senha</span>
+    <input type="password" id="senha" placeholder="Digite sua senha...">
+    <input type="submit" style="display: none">
   </div>
-</div>
+  <br>
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAAAkv36dAMBCxea7Y"></div>
+  
+  <div class="buttons-wrap">
+    <button class="register-btn" onclick="location.href = 'comprar.html'" id="registrar" type="button">Entrar</button>
+    <button class="login-btn" onclick="login()" type="button">Registrar</button>
+  </div>
+  <div style="margin-top:2vh"></div>
+</form>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script type="text/javascript">
-  $(document).ready(function() {
-      $('#realizar').on('click', function() {
-          const usuario = $('#user').val();
-          const email = $('#email').val();
-          const senha = $('#pass').val();
-          const plano = $('#tipo').val();
-  
-          if (!usuario || !email || !senha) {
-              $('#aviso').text('Por favor, preencha todos os campos!');
-              return;
-          }
-  
-          $.ajax({
-              url: `/payments/generate.php?usuario=${usuario}&email=${email}&senha=${senha}&plano=${plano}`,
-              method: 'GET',
-              success: function(data) {
-                  if (data.response && data.response.status === "pending") {
-                      $('.fatherCenter').first().hide();
-                      $('.fatherCenter').last().show();
-                      $("#img-pix").attr('src', 'data:image/jpeg;base64,'+data.base64);
-                      $('#code-pix').val(data.response.qr_code);
-  
-                      // Inicia as requisições a cada 5 segundos
-                      const intervalId = setInterval(function() {
-                          $.ajax({
-                              url: `/payments/approve.php?id=${data.response.payment_id}`,
-                              method: 'GET',
-                              success: function(approvalData) {
-                                  if (approvalData.response && approvalData.response.status === "approved") {
-                                      clearInterval(intervalId); 
-                                      alert('Pagamento aprovado! Seu acesso foi liberado.');
-                                      
-                                  }
-                              },
-                              error: function() {
-                                  console.log('Erro ao verificar o pagamento.');
-                              }
-                          });
-                      }, 5000); // 5000 ms = 5 segundos
-  
-                  } else {
-                      $('#aviso').text('Erro ao gerar o pagamento. Tente novamente.');
-                  }
-              },
-              error: function() {
-                  $('#aviso').text('Erro ao conectar ao servidor. Tente novamente.');
-              }
-          });
-      });
+<script>
+  const notyf = new Notyf({
+    duration: 10000,
+    position: { x: 'center', y: 'top' },
+    types: [
+      { type: 'warning', icon: { className: 'material-icons', tagName: 'i', text: 'warning' }},
+      { type: 'error', duration: 10000, dismissible: true },
+      { type: 'success', duration: 10000, dismissible: true }
+    ]
   });
-  
-  function CopyPix() {
-      const code = $('#code-pix').val();
-      navigator.clipboard.writeText(code).then(function() {
-          alert('Código PIX copiado para a área de transferência!');
-      }, function() {
-          alert('Falha ao copiar o código PIX.');
-      });
+
+  function login() {
+    const email = document.getElementById("usuario").value;
+    const senha = document.getElementById("senha").value;
+
+    // Obtém o token do CAPTCHA
+    const captchaToken = document.querySelector('.cf-turnstile [name="cf-turnstile-response"]').value;
+
+    if (!captchaToken) {
+      notyf.error("Por favor, complete o CAPTCHA.");
+      return;
+    }
+
+    $.ajax({
+      url: 'payments/create.php',
+      type: 'POST',
+      data: { "usuario": email, "senha": senha, "captcha_token": captchaToken },
+      dataType: 'json',
+      success: function (pxmsg) {
+        if (pxmsg.success) {
+          notyf.success('criado com Sucesso, Redirect...');
+          setTimeout(() => { location.href = "login"; }, 3000);
+        } else if (pxmsg.renovar) {
+          notyf.error(pxmsg.message);
+          setTimeout(() => { location.href = "dashboard/renovar.php"; }, 3000);
+        } else {
+          notyf.error(pxmsg.message);
+        }
+      }
+    });
   }
-  </script>
-  
+</script>
+</html>
